@@ -1,5 +1,7 @@
 package com.hotel.ms_reserva.controller;
 
+import com.hotel.ms_reserva.dto.ReservaRequestDTO;
+import com.hotel.ms_reserva.dto.ReservaResponseDTO;
 import com.hotel.ms_reserva.model.Reserva;
 import com.hotel.ms_reserva.service.ReservaService;
 import jakarta.validation.Valid;
@@ -39,18 +41,21 @@ public class ReservaController {
 
     // Esto es para crear una reserva y aqui se van activar las reglas de negocio
     @PostMapping
-    public ResponseEntity<?> guardar(@Valid @RequestBody Reserva reserva,org.springframework.validation.BindingResult result){
+    public ResponseEntity<?> guardar(@Valid @RequestBody ReservaRequestDTO reservaDTO, BindingResult result){
 
-        if(result.hasErrors()){
+        // 1. Verificamos las validaciones del DTO (@NotNull, @Future, etc.)
+        if (result.hasErrors()) {
             String mensajeError = result.getAllErrors().get(0).getDefaultMessage();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mensajeError);
         }
 
         try {
-            Reserva nuevaReserva = reservaService.save(reserva);
+            // 2. Llamamos al service que ahora recibe y devuelve DTOs
+            ReservaResponseDTO nuevaReserva = reservaService.save(reservaDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevaReserva);
+
         } catch (IllegalArgumentException | IllegalStateException e) {
-            // aca captura los throw new que creamos en el service
+            // 3. Capturamos las reglas de negocio (fechas, max 3 reservas)
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno en el servidor");

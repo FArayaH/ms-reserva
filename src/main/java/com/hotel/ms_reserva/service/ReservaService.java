@@ -1,5 +1,7 @@
 package com.hotel.ms_reserva.service;
 
+import com.hotel.ms_reserva.dto.ReservaRequestDTO;
+import com.hotel.ms_reserva.dto.ReservaResponseDTO;
 import com.hotel.ms_reserva.model.Reserva;
 import com.hotel.ms_reserva.repository.ReservaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,31 +24,49 @@ public class ReservaService {
     }
 
     //Metodo para poder guardar las reglas de negocio
-    public Reserva save(Reserva reserva) {
+    public ReservaResponseDTO save(ReservaRequestDTO reservaRequestDTO) {
 
-        // 🛡️ Regla de Negocio: Asegurar que toda reserva nueva nazca como PENDIENTE
-        if (reserva.getEstado() == null) {
-            reserva.setEstado("PENDIENTE");
+        // 1. Regla de coherencia de fechas (Salida > Entrada) usando el DTO
+        if (reservaRequestDTO.getFechaSalida().isBefore(reservaRequestDTO.getFechaEntrada()) ||
+                reservaRequestDTO.getFechaSalida().isEqual(reservaRequestDTO.getFechaEntrada())) {
+            throw new IllegalArgumentException("Error la fecha de salida debe ser posterior a la fecha de entrada");
         }
 
-        // 1. Regla de coherencia de fechas (Salida > Entrada)
-        if (reserva.getFechaSalida().isBefore(reserva.getFechaEntrada()) ||
-                reserva.getFechaSalida().isEqual(reserva.getFechaEntrada())) {
-
-            throw new IllegalArgumentException("Error: la fecha de salida debe ser posterior a la fecha de entrada");
-        }
-    long diasEstadia = ChronoUnit.DAYS.between(reserva.getFechaEntrada(),reserva.getFechaSalida());
+        long diasEstadia = ChronoUnit.DAYS.between(reservaRequestDTO.getFechaEntrada(), reservaRequestDTO.getFechaSalida());
         if (diasEstadia > 30) {
-        throw new IllegalStateException("Error: La reserva no puede durar más de 30 días.");
+            throw new IllegalStateException("Error La reserva no puede durar más de 30 días.");
         }
-        //regla de negocio para que no spamen reservas
-    long reservasPendientes = reservaRepository.countByUsuarioIdAndEstado(reserva.getUsuarioId(),"Pendiente");
+
+        // 2. Regla de negocio para que no spamen reservas usando el DTO
+        long reservasPendientes = reservaRepository.countByUsuarioIdAndEstado(reservaRequestDTO.getUsuarioId(), "PENDIENTE");
         if (reservasPendientes >= 3) {
-            throw new IllegalStateException("Error: El usuario ya tiene el límite máximo de 3 reservas pendientes");
+            throw new IllegalStateException("Error El usuario ya tiene el límite máximo de 3 reservas pendientes");
         }
 
-        return reservaRepository.save(reserva);
+        // 3. Transformo el DTO de entrada a la Entidad (Model) real
+        Reserva reserva = new Reserva();
+        reserva.setHotelId(reservaRequestDTO.getHotelId());
+        reserva.setUsuarioId(reservaRequestDTO.getUsuarioId());
+        reserva.setFechaEntrada(reservaRequestDTO.getFechaEntrada());
+        reserva.setFechaSalida(reservaRequestDTO.getFechaSalida());
+        reserva.setCantidadPersonas(reservaRequestDTO.getCantidadPersonas());
 
+        // Regla de Negocio Asegurar que toda reserva nueva nazca como PENDIENTE
+        reserva.setEstado("PENDIENTE");
+
+        //  Guardamos en la base de datos
+        Reserva reservaGuardada = reservaRepository.save(reserva);
+
+        //  Transformamos la Reserva guardada al DTO de salida y lo retorno
+        return new ReservaResponseDTO(
+                reservaGuardada.getId(),
+                reservaGuardada.getHotelId(),
+                reservaGuardada.getUsuarioId(),
+                reservaGuardada.getFechaEntrada(),
+                reservaGuardada.getFechaSalida(),
+                reservaGuardada.getCantidadPersonas(),
+                reservaGuardada.getEstado()
+        );
     }
     public void delete(Long id) {
         //  busca la reserva
