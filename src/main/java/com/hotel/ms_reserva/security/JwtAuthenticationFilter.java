@@ -19,7 +19,7 @@ import java.util.ArrayList;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     // USAMOS LA MISMA CLAVE QUE PUSIMOS EN MS-AUTENTICACION
-    private static final String SECRET_KEY_STRING = "MiClaveSecretaSuperSeguraParaHotel1234567890";
+    private static final String SECRET_KEY_STRING = "hotel-microservicios-secret-key-2026-segura";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
