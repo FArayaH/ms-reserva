@@ -12,7 +12,6 @@ import java.time.LocalDate;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class Reserva {
 
     @Id
@@ -20,10 +19,10 @@ public class Reserva {
     private Long id;
     private Long hotelId;
     private Long usuarioId;
+    private Long habitacionId;
     private LocalDate fechaEntrada;
     private LocalDate fechaSalida;
     private String estado = "PENDIENTE";
     private Integer cantidadPersonas;
-
 
 }

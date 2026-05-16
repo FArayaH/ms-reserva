@@ -13,9 +13,9 @@ public class ReservaResponseDTO {
     private Long id;
     private Long hotelId;
     private Long usuarioId;
+    private Long habitacionId;
     private LocalDate fechaEntrada;
     private LocalDate fechaSalida;
     private Integer cantidadPersonas;
     private String estado;
-
 }

@@ -18,6 +18,9 @@ public class ReservaRequestDTO {
     @NotNull(message = "El ID del usuario es obligatorio")
     private Long usuarioId;
 
+    @NotNull(message = "El ID de la habitacion es obligatorio")
+    private Long habitacionId;
+
     //regla de negocio No se puede hacer una en el pasado
     @NotNull(message = "La fecha de entrada es obligatoria")
     @FutureOrPresent(message = "La fecha de entrada debe ser hoy o en el futuro")
