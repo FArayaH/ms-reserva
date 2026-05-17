@@ -20,7 +20,6 @@ public class ClienteWebClient {
         try {
             return webClientBuilder.build()
                     .get()
-                    // ⚠️ IMPORTANTE: Ajusta el puerto (ej: 8082) al puerto real donde corre ms-cliente
                     .uri("http://localhost:8082/api/v1/cliente/" + clienteId)
                     .header("Authorization", token) // Pasamos el candado
                     .retrieve()
