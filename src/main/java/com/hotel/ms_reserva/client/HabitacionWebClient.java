@@ -19,7 +19,7 @@ public class HabitacionWebClient {
         try {
             return webClientBuilder.build()
                     .get()
-                    .uri("http://localhost:8083/api/v1/habitaciones/" + habitacionId)
+                    .uri("http://localhost:8085/api/v1/habitaciones/" + habitacionId)
                     .header("Authorization", token)
                     .retrieve()
                     .bodyToMono(HabitacionDTO.class)

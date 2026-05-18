@@ -17,7 +17,7 @@ public class HotelWebClient {
         try {
             return webClientBuilder.build()
                     .get()
-                    .uri("http://localhost:8084/api/v1/hoteles/" + id)
+                    .uri("http://localhost:8087/api/v1/hoteles/" + id)
                     .header("Authorization", "Bearer " + token)
                     .retrieve()
                     .bodyToMono(HotelDTO.class)

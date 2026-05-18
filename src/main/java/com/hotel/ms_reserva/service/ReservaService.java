@@ -3,6 +3,7 @@ package com.hotel.ms_reserva.service;
 import com.hotel.ms_reserva.client.ClienteWebClient;
 import com.hotel.ms_reserva.client.HabitacionWebClient;
 import com.hotel.ms_reserva.client.HotelWebClient;
+import com.hotel.ms_reserva.client.NotificacionWebClient;
 import com.hotel.ms_reserva.dto.ClienteDTO;
 import com.hotel.ms_reserva.dto.HabitacionDTO;
 import com.hotel.ms_reserva.dto.HotelDTO;
@@ -27,6 +28,7 @@ public class ReservaService {
     private final ClienteWebClient clienteWebClient;
     private final HabitacionWebClient habitacionWebClient;
     private final HotelWebClient hotelWebClient;
+    private final NotificacionWebClient notificacionWebClient;
 
     @Transactional(readOnly = true)
     public List<Reserva> findAll() {
@@ -115,6 +117,15 @@ public class ReservaService {
         log.info("[RESERVA_SERVICE] Reglas validadas. Guardando reserva en BD...");
         Reserva reservaGuardada = reservaRepository.save(reserva);
 
+        // --- DISPARO AUTOMÁTICO DE LA NOTIFICACIÓN CORREGIDO ---
+        try {
+            // Se utiliza el ID de la entidad persistida para coordinar con ms-notificacion
+            notificacionWebClient.dispararNotificacion(reservaGuardada.getId(), token);
+            log.info("[RESERVA_SERVICE] Petición de notificación enviada de forma automática a ms-notificacion para Reserva ID: {}.", reservaGuardada.getId());
+        } catch (Exception e) {
+            log.error("[RESERVA_SERVICE] La reserva se guardó, pero falló el envío de la notificación: {}", e.getMessage());
+        }
+
         // Transformamos la Reserva guardada al DTO de salida y lo retornamos
         return new ReservaResponseDTO(
                 reservaGuardada.getId(),
@@ -145,5 +156,22 @@ public class ReservaService {
 
         reservaRepository.deleteById(id);
         log.info("[RESERVA_SERVICE] Reserva ID: {} eliminada correctamente", id);
+    }
+
+    // Método para actualizar el estado de la reserva (Llamado por ms-checkin y ms-checkout)
+    @Transactional
+    public void cambiarEstado(Long id, String nuevoEstado) {
+        log.info(">> Cambiando estado de la reserva ID: {} a {}", id, nuevoEstado);
+
+        // 1. Buscamos la reserva real en la base de datos
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("La reserva con ID " + id + " no existe."));
+
+        // 2. Le cambiamos el estado
+        reserva.setEstado(nuevoEstado.toUpperCase());
+
+        // 3. Guardamos la actualización
+        reservaRepository.save(reserva);
+        log.info("<< Estado de la reserva ID: {} actualizado con éxito en la BD", id);
     }
 }

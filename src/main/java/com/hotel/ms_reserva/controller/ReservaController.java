@@ -69,6 +69,19 @@ public class ReservaController {
         }
     }
 
+    // PUT para actualizar el estado de la reserva
+    @PutMapping("/{id}/estado")
+    // @PreAuthorize("isAuthenticated()") // Comentado por si acaso, para no tener problemas de token por ahora
+    public ResponseEntity<?> actualizarEstado(@PathVariable Long id, @RequestParam String nuevoEstado) {
+        log.info("[RESERVA] PUT /api/v1/reserva/{}/estado - Cambiando a {}", id, nuevoEstado);
+        try {
+            reservaService.cambiarEstado(id, nuevoEstado);
+            return ResponseEntity.ok("Estado de la reserva actualizado a " + nuevoEstado);
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body("Error: " + e.getMessage());
+        }
+    }
+
     // DELETE para eliminar reserva por ID
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')") // Al igual que tu grupo: Solo el ADMIN puede borrar registros
